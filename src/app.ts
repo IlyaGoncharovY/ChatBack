@@ -1,6 +1,6 @@
 import express from "express";
-import { createServer } from "http";
-import { Server } from "socket.io";
+import {createServer} from "http";
+import {Server} from "socket.io";
 import cors from "cors";
 
 const app = express();
@@ -23,23 +23,49 @@ const messages = [
     {message: 'hello Friends', id: '3a3a3a', user: {id: '3s3s3s', name: 'Vova'}},
 ]
 
+const usersState = new Map();
+
 io.on("connection", (socket) => {
     console.log('a user connected');
 
+    usersState.set(socket, {id: new Date().getTime().toString(), name: 'newUser'})
+
+
+    socket.on('disconnect', () => {
+        console.log(`user disconnected`);
+        usersState.delete(socket)
+    });
+
+    socket.on('client-name-sent', (name: string) => {
+
+        if (typeof name !== 'string') {
+            return;
+        }
+
+        const user = usersState.get(socket)
+        user.name = name
+    })
+
+
     socket.on('click-message-sent', (message: string) => {
         console.log(message)
-        let messageItem = {message: message, id: 'newMessage' + new Date().getTime(),
-        user: {id: '1a1a1a', name: 'Vasya'}}
+
+        if (typeof message !== 'string') {
+            return;
+        }
+
+        const user = usersState.get(socket)
+
+        let messageItem = {
+            message: message, id: 'newMessage' + new Date().getTime(),
+            user: {id: user.id, name: user.name}
+        }
         messages.push(messageItem)
 
         socket.emit('new-message-sent', messageItem)
     })
 
     socket.emit('init-messages-published', messages)
-
-    socket.on('disconnect', () => {
-        console.log('user disconnected');
-    });
 
     socket.on('error', (error) => {
         console.error('Socket error:', error);
