@@ -5,7 +5,7 @@ import cors from "cors";
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
+const socked = new Server(httpServer, {
     cors: {
         origin: "http://localhost:5173"
     }
@@ -25,36 +25,40 @@ const messages = [
 
 const usersState = new Map();
 
-io.on("connection", (socket) => {
+socked.on("connection", (sockedChannel) => {
     console.log('a user connected');
 
-    usersState.set(socket, {id: new Date().getTime().toString(), name: 'newUser'})
+    usersState.set(sockedChannel, {id: new Date().getTime().toString(), name: 'newUser'})
 
 
-    socket.on('disconnect', () => {
+    socked.on('disconnect', () => {
         console.log(`user disconnected`);
-        usersState.delete(socket)
+        usersState.delete(sockedChannel)
     });
 
-    socket.on('client-name-sent', (name: string) => {
-
+    sockedChannel.on('client-name-sent', (name: string) => {
+        console.log(name)
         if (typeof name !== 'string') {
             return;
         }
 
-        const user = usersState.get(socket)
+        const user = usersState.get(sockedChannel)
         user.name = name
     })
 
+    sockedChannel.on('client-typed', () => {
+       socked.emit('user-typing', usersState.get(sockedChannel))
+    })
 
-    socket.on('click-message-sent', (message: string) => {
+
+    sockedChannel.on('click-message-sent', (message: string) => {
         console.log(message)
 
         if (typeof message !== 'string') {
             return;
         }
 
-        const user = usersState.get(socket)
+        const user = usersState.get(sockedChannel)
 
         let messageItem = {
             message: message, id: 'newMessage' + new Date().getTime(),
@@ -62,12 +66,12 @@ io.on("connection", (socket) => {
         }
         messages.push(messageItem)
 
-        socket.emit('new-message-sent', messageItem)
+        socked.emit('new-message-sent', messageItem)
     })
 
-    socket.emit('init-messages-published', messages)
+    sockedChannel.emit('init-messages-published', messages)
 
-    socket.on('error', (error) => {
+    sockedChannel.on('error', (error) => {
         console.error('Socket error:', error);
     });
 });
