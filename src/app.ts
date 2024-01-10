@@ -30,14 +30,13 @@ socked.on("connection", (sockedChannel) => {
 
     usersState.set(sockedChannel, {id: new Date().getTime().toString(), name: 'newUser'})
 
-
     socked.on('disconnect', () => {
         console.log(`user disconnected`);
         usersState.delete(sockedChannel)
     });
 
     sockedChannel.on('client-name-sent', (name: string) => {
-        console.log(name)
+        console.log(`name user: ${name}`)
         if (typeof name !== 'string') {
             return;
         }
@@ -47,14 +46,13 @@ socked.on("connection", (sockedChannel) => {
     })
 
     sockedChannel.on('client-typed', () => {
-       socked.emit('user-typing', usersState.get(sockedChannel))
+     sockedChannel.broadcast.emit('user-typing', usersState.get(sockedChannel))
     })
 
+    sockedChannel.on('click-message-sent', (message: string, successFn: (message: string | null) => void) => {
 
-    sockedChannel.on('click-message-sent', (message: string) => {
-        console.log(message)
-
-        if (typeof message !== 'string') {
+        if (typeof message !== 'string' || message.length > 35) {
+            successFn('Message should be than 35 chars');
             return;
         }
 
@@ -66,10 +64,16 @@ socked.on("connection", (sockedChannel) => {
         }
         messages.push(messageItem)
 
+        console.log(`new message to: ${user.name} - ${message}`)
+
         socked.emit('new-message-sent', messageItem)
+
+        successFn(null);
     })
 
-    sockedChannel.emit('init-messages-published', messages)
+    sockedChannel.emit('init-messages-published', messages, (data: string) => {
+        console.log(`init message received: ${data}`)
+    })
 
     sockedChannel.on('error', (error) => {
         console.error('Socket error:', error);
