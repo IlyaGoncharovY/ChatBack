@@ -1,59 +1,30 @@
 import {Server, Socket} from 'socket.io';
 import { v1 } from 'uuid';
 import { messages, usersState } from '../models';
-import {SOCKET_KEY} from "./helpers/socketKey";
+import {SOCKET_KEY} from "./helpers";
+import {
+    clientTypedFunction,
+    disconnectFunction, errorFunction,
+    initMessageFunction,
+    messageSentFunction,
+    nameSentFunction
+} from "./helpers";
 
 export const handleConnection = (socketIO: Server, socketChannel: Socket) => {
     console.log('a user connected');
 
     usersState.set(socketChannel, { id: v1(), name: 'newUser' });
 
-    socketIO.on(SOCKET_KEY.DISCONNECT, () => {
-        console.log(`user disconnected`);
-        usersState.delete(socketChannel);
-    });
+    disconnectFunction(socketIO, SOCKET_KEY.DISCONNECT, usersState, socketChannel)
 
-    socketChannel.on(SOCKET_KEY.NAME_SENT, (name: string) => {
-        console.log(`name user: ${name}`);
-        if (typeof name !== 'string') {
-            return;
-        }
+    nameSentFunction(socketChannel, SOCKET_KEY.NAME_SENT, usersState)
 
-        const user = usersState.get(socketChannel);
-        user.name = name;
-    });
+    clientTypedFunction(socketChannel, SOCKET_KEY.CLIENT_TYPED, usersState)
 
-    socketChannel.on(SOCKET_KEY.CLIENT_TYPED, () => {
-        socketChannel.broadcast.emit('user-typing', usersState.get(socketChannel));
-    });
+    messageSentFunction(socketChannel, SOCKET_KEY.MESSAGE_SENT, usersState, messages, socketIO, SOCKET_KEY.NEW_MESSAGE_SENT)
 
-    socketChannel.on(SOCKET_KEY.MESSAGE_SENT, (message: string, successFn: (message: string | null) => void) => {
-        if (typeof message !== 'string' || message.length > 35) {
-            successFn('Message should be less than 35 chars');
-            return;
-        }
+    initMessageFunction(socketChannel, SOCKET_KEY.INIT_MESSAGE_PUBLISHED, messages)
 
-        const user = usersState.get(socketChannel);
+    errorFunction(socketChannel, SOCKET_KEY.ERROR)
 
-        let messageItem = {
-            message: message,
-            id: v1(),
-            user: { id: user.id, name: user.name },
-        };
-        messages.push(messageItem);
-
-        console.log(`new message to: ${user.name} - ${message}`);
-
-        socketIO.emit(SOCKET_KEY.NEW_MESSAGE_SENT, messageItem);
-
-        successFn(null);
-    });
-
-    socketChannel.emit(SOCKET_KEY.INIT_MESSAGE_PUBLISHED, messages, (data: string) => {
-        console.log(`init message received: ${data}`);
-    });
-
-    socketChannel.on(SOCKET_KEY.ERROR, (error) => {
-        console.error('Socket error:', error);
-    });
 };
