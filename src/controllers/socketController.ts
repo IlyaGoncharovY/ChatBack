@@ -1,11 +1,12 @@
 import {Server, Socket} from 'socket.io';
+import { v1 } from 'uuid';
 import { messages, usersState } from '../models';
 import {SOCKET_KEY} from "./helpers/socketKey";
 
 export const handleConnection = (socketIO: Server, socketChannel: Socket) => {
     console.log('a user connected');
 
-    usersState.set(socketChannel, { id: new Date().getTime().toString(), name: 'newUser' });
+    usersState.set(socketChannel, { id: v1(), name: 'newUser' });
 
     socketIO.on(SOCKET_KEY.DISCONNECT, () => {
         console.log(`user disconnected`);
@@ -36,7 +37,7 @@ export const handleConnection = (socketIO: Server, socketChannel: Socket) => {
 
         let messageItem = {
             message: message,
-            id: 'newMessage' + new Date().getTime(),
+            id: v1(),
             user: { id: user.id, name: user.name },
         };
         messages.push(messageItem);
