@@ -2,8 +2,8 @@ export interface Message {
     message: string;
     id: string;
     user: {
-        id: string;
-        name: string;
+        id: string | undefined;
+        name: string | undefined;
     };
 }
 

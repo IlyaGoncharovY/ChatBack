@@ -40,7 +40,9 @@ export const nameSentFunction = (
         }
 
         const user = usersState.get(socketChannel);
-        user.name = name;
+        if (user) {
+            user.name = name;
+        }
     });
 }
 
@@ -86,13 +88,14 @@ export const messageSentFunction = (
         const user = usersState.get(socketChannel);
 
         let messageItem = {
+
             message: message,
             id: v1(),
-            user: { id: user.id, name: user.name },
+            user: { id: user?.id, name: user?.name },
         };
         messages.push(messageItem);
 
-        console.log(`new message to: ${user.name} - ${message}`);
+        console.log(`new message to: ${user?.name} - ${message}`);
 
         socketIO.emit(key2, messageItem);
 
