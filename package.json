@@ -2,8 +2,8 @@
   "name": "chatback",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/app.js",
   "type": "module",
+  "main": "dist/app.js",
   "scripts": {
     "start-dev": "nodemon --inspect dist/app.js",
     "watch-dev": "tsc -w",
