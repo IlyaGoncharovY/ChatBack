@@ -24,7 +24,7 @@ socketIO.on('connection',
         handleConnection(socketIO, socketChannel)
 );
 
-const PORT = process.env.DATABASE_URL || 3009;
+const PORT = process.env.PORT;
 
 httpServer.listen(PORT, () => {
     console.log(`Listening on ${PORT} port`);
