@@ -2,7 +2,7 @@
   "name": "chatback",
   "version": "1.0.0",
   "description": "",
-  "type": "commonjs",
+  "type": "module",
   "main": "app.js",
   "scripts": {
     "start-dev": "nodemon --inspect dist/app.js",
