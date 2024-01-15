@@ -10,7 +10,8 @@ const httpServer = createServer(app);
 const socketIO = new Server(httpServer, {
     cors: {
         // origin: 'http://localhost:5173',
-        origin: 'https://ilyagoncharovy.github.io/ChatFront/',
+        origin: 'https://ilyagoncharovy.github.io',
+        methods: ['GET', 'POST']
     },
 });
 
