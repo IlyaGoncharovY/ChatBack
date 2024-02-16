@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import {Server} from 'socket.io';
 import {createServer} from 'http';
 
@@ -15,7 +14,7 @@ const socketIO = new Server(httpServer, {
     },
 });
 
-app.use(cors());
+// app.use(cors());
 
 app.get('/', (req, res) => {
     res.send('Its ws server!!!444');
